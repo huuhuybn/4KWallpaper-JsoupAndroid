@@ -2,6 +2,7 @@ package com.dotplays.slide8;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,8 +10,11 @@ import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.dotplays.slide8.model.Photo;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -25,55 +29,46 @@ import java.util.Scanner;
 
 public class MainActivity extends AppCompatActivity {
 
-    String link = "https://vnexpress.net/";
 
-    String wallpaper = "https://4kwallpapers.com/";
-
-    WebView webView;
+    String wallpaper = "https://4kwallpapers.com/?page=";
+    ListView ls;
+    ImageAdapter imageAdapter;
+    ArrayList<Photo> arrayList;
+    int page = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        webView = findViewById(R.id.web);
-
-        String data = "<!DOCTYPE html>\n" +
-                "<html>\n" +
-                "<body>\n" +
-                "\n" +
-                "<p><b>This text is bold</b></p>\n" +
-                "<p><i>This text is italic</i></p>\n" +
-                "<p>This is<sub> subscript</sub> and <sup>superscript</sup></p>\n" +
-                "\n" +
-                "</body>\n" +
-                "</html>\n";
-
-        //webView.loadData(data, "text/html", "utf-8");
-
-        webView.setWebChromeClient(new WebChromeClient());
-        webView.setWebViewClient(new WebViewClient());
-        webView.loadUrl(link);
-
+        ls = findViewById(R.id.list);
+        arrayList = new ArrayList<>();
+        imageAdapter = new ImageAdapter(arrayList);
+        getData(page);
+        ls.setAdapter(imageAdapter);
+        ls.setOnScrollListener(new EndlessScrollListener() {
+            @Override
+            public boolean onLoadMore(int i, int totalItemsCount) {
+                page++;
+                getData(page);
+                return false;
+            }
+        });
+        ls.setOnItemClickListener((parent, view, position, id) -> {
+            Intent i = new Intent(MainActivity.this, SubActivity.class);
+            i.putExtra("data", arrayList.get(position));
+            startActivity(i);
+        });
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        if (webView.canGoBack()) {
-            webView.goBack();
-        }
-    }
 
-    public void getData(View view) {
-        TextView tvText = findViewById(R.id.tvText);
+    public void getData(int page) {
 
-        //B1 : mo luong moi , new thread
         AsyncTask task = new AsyncTask() {
             // xu ly trong thread
             @Override
             protected Object doInBackground(Object[] objects) {
                 try {
-                    URL url = new URL(wallpaper);
+                    URL url = new URL(wallpaper + page);
                     HttpURLConnection connection =
                             (HttpURLConnection) url.openConnection();
                     InputStream stream = connection.getInputStream();
@@ -94,26 +89,27 @@ public class MainActivity extends AppCompatActivity {
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
                 // Nap html vao doi tuong Jsoup
-                ArrayList<String> arrayList = new ArrayList<>();
+                ArrayList<Photo> subs = new ArrayList<>();
                 Document document = Jsoup.parse((String) o);
                 Elements elements = document.select("a");
                 for (int i = 0; i < elements.size(); i++) {
+                    Log.e("---", "----------------");
+                    String detail = elements.get(i).attr("href");
+                    Log.e("AAA",detail);
                     Elements imgs = elements.get(i).getElementsByTag("img");
-                    if (imgs.size() > 0){
+                    if (imgs.size() > 0) {
                         Element img = imgs.get(0);
                         String url = img.attr("data-cfsrc");
-                        Log.e("URL",url);
-                        arrayList.add(url);
+                        Photo photo = new Photo();
+                        photo.setUrlThumb(url);
+                        photo.setLinkDetail(detail);
+                        subs.add(photo);
                     }
                     //Log.e("ABC", elements.get(i).html());
                     //Log.e("============","==============================");
                 }
-                ListView ls = findViewById(R.id.list);
-                ImageAdapter imageAdapter = new ImageAdapter(arrayList);
-                ls.setAdapter(imageAdapter);
-
-                tvText.setText((String) o);
-
+                arrayList.addAll(subs);
+                imageAdapter.notifyDataSetChanged();
             }
         };
         // thuc thi thread

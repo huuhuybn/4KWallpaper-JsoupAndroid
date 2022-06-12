@@ -6,15 +6,16 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 
+import com.dotplays.slide8.model.Photo;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
 public class ImageAdapter extends BaseAdapter {
 
-    ArrayList<String> list;
+    ArrayList<Photo> list;
 
-    public ImageAdapter(ArrayList<String> list) {
+    public ImageAdapter(ArrayList<Photo> list) {
         this.list = list;
     }
 
@@ -38,7 +39,7 @@ public class ImageAdapter extends BaseAdapter {
         view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.row, viewGroup, false);
 
         Picasso.get()
-                .load(list.get(i))
+                .load(list.get(i).getUrlThumb())
                 .into((ImageView) view.findViewById(R.id.img));
 
         return view;

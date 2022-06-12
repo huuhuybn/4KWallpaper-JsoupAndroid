@@ -5,14 +5,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".SubActivity">
 
-
-
-    <ListView
-        android:id="@+id/list"
+    <ImageView
+        android:id="@+id/imgImage"
+        android:scaleType="fitStart"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"/>
 
+    <Button
+        android:text="DOWNLOAD"
+        android:onClick="download"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
 </LinearLayout>
